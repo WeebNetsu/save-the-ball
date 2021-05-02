@@ -1,3 +1,6 @@
+# my stuff
+.vscode
+
 # Compiled Lua sources
 luac.out
 

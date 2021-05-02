@@ -13,13 +13,7 @@ function Enemy:new(level, color, radius)
 end
 
 function Enemy:checkTouched(player_x, player_y, cursor_radius)
-    if (player_x + cursor_radius >= self.x - self.radius) and (player_x - cursor_radius <= self.x + self.radius) then
-        if (player_y + cursor_radius >= self.y - self.radius) and (player_y - cursor_radius <= self.y + self.radius) then
-            return true
-        end
-    end
-
-    return false
+    return math.sqrt(math.pow(self.x - player_x, 2) + math.pow(self.y - player_y, 2)) <= cursor_radius * 2
 end
 
 function Enemy:move(player_x, player_y)
