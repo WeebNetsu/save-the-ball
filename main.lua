@@ -6,11 +6,12 @@ math.randomseed(os.time())
 local game = {
     difficulty = 1, -- the higher the number, the more difficult
     state = {
-        menu = true,
+        menu = false,
         paused = false,
         running = false,
-        ended = false
-    }
+        ended = true
+    },
+    points = 0
 }
 
 local player = {
@@ -20,32 +21,48 @@ local player = {
 }
 
 local buttons = {
-    red = 0.6,
-    green = 0.6,
-    blue = 0.6
+    colors = {
+        red = 0.6,
+        green = 0.6,
+        blue = 0.6
+    }
 }
 
 local fonts = {
-    medium = love.graphics.newFont(16)
+    medium = {
+        font = love.graphics.newFont(16),
+        size = 16
+    },
+    large = {
+        font = love.graphics.newFont(24),
+        size = 24
+    },
+    massive = {
+        font = love.graphics.newFont(60),
+        size = 60
+    }
 }
 
 local enemies = {}
 
 local function startGame()
-    if game.state["menu"] then
-        game.state["menu"] = false
-        game.state["running"] = true
+    -- if game.state["menu"] then
+    game.state["menu"] = false
+    game.state["running"] = true
+    game.points = 0
 
-        table.insert(enemies, 1, enemy:new(game.difficulty * 1)) -- * 1 since it's only the first enemy
-    end
+    table.insert(enemies, 1, enemy(game.difficulty * 1)) -- * 1 since it's only the first enemy
+    -- end
 end
 
 function love.load()
     -- love.window.setFullscreen(true, "desktop")
     -- local mouse_x, mouse_y = love.mouse.getPosition()
     love.mouse.setVisible(false) -- makes mouse invisible
-    
-    play_button = button:new(startGame, nil, {r = buttons["red"], g = buttons["green"], b = buttons["blue"]}, 120, 40)
+    love.window.setTitle("Save the Ball!")
+
+    buttons.play_game = button(startGame, nil, {r = buttons.colors["red"], g = buttons.colors["green"], b = buttons.colors["blue"]}, 120, 40)
+    buttons.replay_game = button(startGame, nil, {r = buttons.colors["red"], g = buttons.colors["green"], b = buttons.colors["blue"]}, 100, 50)
 end
 
 function love.update(dt)
@@ -55,14 +72,15 @@ function love.update(dt)
         for i = 1, #enemies do
             if not enemies[i]:checkTouched(player.x, player.y, player.radius) then
                 enemies[i]:move(player.x, player.y)
+
+                game.points = game.points + dt
+            else
+                game.state["ended"] = true
+                game.state["running"] = false
             end
         end
     elseif game.state["menu"] then
-        -- if play_button:checkHovered(player.x, player.y, player.radius) then
-        --     play_button:setButtonColor(0.7, 0.7, 0.7)
-        -- else
-        --     play_button:setButtonColor(buttons.red, buttons.green, buttons.blue)
-        -- end
+    elseif game.state["ended"] then
     end
 end
 
@@ -70,27 +88,41 @@ function love.mousepressed(x, y, button, istouch, presses)
     if not game.state["running"] then
         if button == 1 then
             if game.state["menu"] then
-                play_button:checkPressed(x, y, player.radius)
+                buttons.play_game:checkPressed(x, y, player.radius)
+            elseif game.state["ended"] then
+                for index in pairs (enemies) do -- remove all enemies from the game
+                    enemies[index] = nil
+                end
+
+                buttons.replay_game:checkPressed(x, y, player.radius)
             end
-        end 
+        end
     end
 end
 
 function love.draw()
-    love.graphics.setFont(fonts.medium)
+    love.graphics.setFont(fonts.medium.font)
 
     if game.state["running"] then
-        love.graphics.circle("fill", player.x, player.y, player.radius)
+        love.graphics.printf(math.floor(game.points), fonts.large.font, 0, 10, love.graphics.getWidth(), "center")
 
         for i = 1, #enemies do
             enemies[i]:draw()
         end
+
+        love.graphics.circle("fill", player.x, player.y, player.radius)
     elseif game.state["menu"] then
-        -- love.graphics.setColor(1, 1, 1)
-        -- love.graphics.rectangle("fill", 20, 20, 100, 50)
-        -- love.graphics.setColor(0, 0, 0)
-        -- love.graphics.print("Hello", 60, 45)
-        play_button:draw("Play Game", 10, 20, 17, 10)
-        love.graphics.circle("fill", player.x, player.y, player.radius / 2)
+        buttons.play_game:draw("Play Game", 10, 20, 17, 10)
+        -- love.graphics.circle("fill", player.x, player.y, player.radius / 2)
+    elseif game.state["ended"] then
+        -- love.event.quit() -- quits love
+        love.graphics.setFont(fonts.large.font)
+        buttons.replay_game:draw("Replay", love.graphics.getWidth() / 2.25, love.graphics.getHeight() / 1.8, 10, 10)
+        love.graphics.setFont(fonts.medium.font)
+        love.graphics.printf(math.floor(game.points), fonts.massive.font, 0, love.graphics.getHeight() / 2 - fonts.massive.size, love.graphics.getWidth(), "center")
     end
+
+   if not game.state["running"] then
+        love.graphics.circle("fill", player.x, player.y, player.radius / 2)
+   end
 end
