@@ -83,7 +83,7 @@ function love.update(dt)
     elseif game.state["ended"] then
     end
 end
--- 
+
 function love.mousepressed(x, y, button, istouch, presses)
     if not game.state["running"] then
         if button == 1 then
