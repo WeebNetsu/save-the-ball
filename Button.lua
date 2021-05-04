@@ -1,10 +1,11 @@
-function Button(func, text_color, button_color, width, height)
+function Button(func, func_param, text_color, button_color, width, height)
     return {
         text_color = text_color or { r = 0, g = 0, b = 0 }, -- black
         button_color = button_color or { r = 1, g = 1, b = 1 }, -- white
         width = width or 100,
         height = height or 100,
         func = func or function() print("This button has no function attached") end,
+        func_param = func_param,
         text = "No Text",
         button_x = 0, 
         button_y = 0,
@@ -18,7 +19,11 @@ function Button(func, text_color, button_color, width, height)
         checkPressed = function (self, mouse_x, mouse_y, cursor_radius)
             if (mouse_x + cursor_radius >= self.button_x) and (mouse_x - cursor_radius <= self.button_x + self.width) then
                 if (mouse_y + cursor_radius >= self.button_y) and (mouse_y - cursor_radius <= self.button_y + self.height) then
-                    self.func()
+                    if self.func_param then
+                        self.func(self.func_param)
+                    else
+                        self.func()
+                    end
                 end
             end
         end,
